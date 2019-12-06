@@ -92,7 +92,7 @@ set_target_properties(Titan PROPERTIES PUBLIC_HEADER "${TITAN_HEADER_FILES}")
 
 # added to compile expriments
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-file( GLOB SOURCE_FILES ${SOURCE_DIR}/*.cpp)
+file( GLOB SOURCE_FILES ${SOURCE_DIR}/*.c* )
 foreach( sourcefile ${SOURCE_FILES} )
     message(${sourcefile})
     get_filename_component(name ${sourcefile} NAME_WE)
