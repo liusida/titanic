@@ -6,7 +6,7 @@ This project gets around `vcpkg` and includes Titan project as part of it, so it
 
 The folder `titan` is cloned from `https://github.com/ja3067/Titan`, we can `cd titan; git pull;` to keep it up to date.
 
-You can either use `cmake` to build the project, or I choose Qt5 Creator as my IDE.
+You can either use `cmake` to build the project, or I choose Qt5 Creator as my debugging IDE to step into Titan's functions.
 
 ## cmake
 
