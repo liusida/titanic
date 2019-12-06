@@ -16,7 +16,7 @@ titanic/build$ cd build
 titanic/build$ cmake ..
 ```
 
-## requirement
+## prerequisites
 
 ```bash
 $ sudo apt install libglfw3-dev libglew-dev libglm-dev freeglut3-dev xorg-dev libglu1-mesa-dev
