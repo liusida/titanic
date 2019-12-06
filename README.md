@@ -14,6 +14,7 @@ You can either use `cmake` to build the project, or I choose Qt5 Creator as my d
 titanic$ mkdir build
 titanic/build$ cd build
 titanic/build$ cmake ..
+titanic/build$ cmake --build .
 ```
 
 ## prerequisites
