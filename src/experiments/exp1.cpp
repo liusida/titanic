@@ -13,7 +13,7 @@ int main() {
   Mass *b = sim.createMass(Vec(0,0,2));
   Mass *c = sim.createMass(Vec(1,0,2));
   Mass *top = sim.createMass(Vec(0,0,3));
-  double d = 0.9996;
+  double d = 0.9996; //damping, so close to 1.0, but if use default value 1.0, everything bounces annoyingly
   a->damping =d;
   b->damping =d;
   c->damping =d;
@@ -21,7 +21,7 @@ int main() {
 
   Spring *s = sim.createSpring(top, a);
   s->_type = ACTIVE_CONTRACT_THEN_EXPAND;
-  s->_omega = 4;
+  s->_omega = 4; //frequency, 4 times per sec
   s = sim.createSpring(top,b);
   s->_type = ACTIVE_CONTRACT_THEN_EXPAND;
   s->_omega = 2;
@@ -35,7 +35,6 @@ int main() {
 
   sim.createPlane(Vec(0, 0, 1), 0); // create constraint plane
 
-  //sim.setAllDeltaTValues(0.001);
   sim.start();
   std::cout<<"simulation Thread Started."<<std::endl;
 
