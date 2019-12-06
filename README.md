@@ -24,7 +24,7 @@ $ sudo apt install libglfw3-dev libglew-dev libglm-dev freeglut3-dev xorg-dev li
 
 Other install notes:
 
-Alien 17 with GPU GTX 1070
+I use Alien 17 with GPU GTX 1070
 
 Ubuntu 19.10 (to avoid confliction, use safe graphic mode, and allow third part source. need set a MOK password and enter it after reboot.)
 
@@ -32,7 +32,7 @@ nVidia Driver 435.21 (use Ubuntu's default, ubuntu-drivers install)
 
 CUDA 10.1 + Patch (Don't install the graphic card driver in cuda)
 
-(titan requires at least CUDA 10.1, and CUDA 10.2 requires at least nVidia driver 440, so CUDA 10.1 is the only choice.)
+(Titan requires at least CUDA 10.1, and CUDA 10.2 requires at least nVidia driver 440, so CUDA 10.1 is the only choice.)
 
 add those to .bashrc
 
