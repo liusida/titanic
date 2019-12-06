@@ -47,8 +47,8 @@ install gcc-8 g++-8, replace /usr/bin/gcc
 ## directory structure
 
 ```bash
-./src/experiments   # Our experiments source files
+./src/experiments   # Source files of our independent experiments
 ./src               # Our classes source files
-./include           # Our classes head files
+./include           # Our classes header files
 ./titan             # Titan's project
 ```
