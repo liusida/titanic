@@ -2,9 +2,11 @@
 #include <chrono>
 #include <thread>
 
+#include <crobot.h>
 #include <sim.h>
 
 int main() {
+  CRobot r;
   Simulation sim;
 
   Mass *a = sim.createMass(Vec(0,0,2));

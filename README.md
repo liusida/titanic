@@ -42,3 +42,13 @@ $ export CUDA_BIN_PATH=/usr/local/cuda/bin
 ```
 
 install gcc-8 g++-8, replace /usr/bin/gcc
+
+
+## directory structure
+
+```bash
+./src/experiments   # Our experiments source files
+./src               # Our classes source files
+./include           # Our classes head files
+./titan             # Titan's project
+```

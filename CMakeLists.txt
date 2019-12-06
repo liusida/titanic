@@ -90,13 +90,18 @@ target_include_directories(Titan PUBLIC
 
 set_target_properties(Titan PROPERTIES PUBLIC_HEADER "${TITAN_HEADER_FILES}")
 
-# added to compile expriments
-set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-file( GLOB SOURCE_FILES ${SOURCE_DIR}/*.c* )
-foreach( sourcefile ${SOURCE_FILES} )
-    message(${sourcefile})
+# added to compile experiments
+
+set(TITANIC_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+set(TITANIC_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
+
+file( GLOB TITANIC_SOURCE_FILES ${TITANIC_SOURCE_DIR}/*.c*)
+file( GLOB EXP_SOURCE_FILES ${TITANIC_SOURCE_DIR}/experiments/*.c* )
+foreach( sourcefile ${EXP_SOURCE_FILES} )
     get_filename_component(name ${sourcefile} NAME_WE)
-    add_executable(${name} ${sourcefile})
-    target_include_directories(${name} PUBLIC ${sourcefile})
+    message("Add Executable: " ${name})
+    add_executable(${name} ${sourcefile} ${TITANIC_SOURCE_FILES})
+    # target_include_directories(${name} PUBLIC ${sourcefile})
+    target_include_directories(${name} PUBLIC ${TITANIC_INCLUDE_DIR})
     target_link_libraries( ${name} Titan )
-endforeach( example_sourcefile ${SOURCE_FILES} )
+endforeach( sourcefile ${EXP_SOURCE_FILES} )
