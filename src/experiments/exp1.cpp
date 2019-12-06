@@ -9,11 +9,33 @@ int main() {
   CRobot r;
   Simulation sim;
 
-  Mass *a = sim.createMass(Vec(0,0,2));
-  Mass *b = sim.createMass(Vec(0,0,1));
-  sim.createSpring(a, b);
+  Mass *a = sim.createMass(Vec(0,1,2));
+  Mass *b = sim.createMass(Vec(0,0,2));
+  Mass *c = sim.createMass(Vec(1,0,2));
+  Mass *top = sim.createMass(Vec(0,0,3));
+  double d = 0.9996;
+  a->damping =d;
+  b->damping =d;
+  c->damping =d;
+  top->damping =d;
+
+  Spring *s = sim.createSpring(top, a);
+  s->_type = ACTIVE_CONTRACT_THEN_EXPAND;
+  s->_omega = 4;
+  s = sim.createSpring(top,b);
+  s->_type = ACTIVE_CONTRACT_THEN_EXPAND;
+  s->_omega = 2;
+  sim.createSpring(top,c);
+  s->_type = ACTIVE_CONTRACT_THEN_EXPAND;
+  s->_omega = 1;
+  sim.createSpring(a,c);
+  sim.createSpring(b,c);
+  sim.createSpring(a,b);
+
+
   sim.createPlane(Vec(0, 0, 1), 0); // create constraint plane
 
+  //sim.setAllDeltaTValues(0.001);
   sim.start();
   std::cout<<"simulation Thread Started."<<std::endl;
 
