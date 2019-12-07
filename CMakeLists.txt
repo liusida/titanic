@@ -3,8 +3,8 @@ set(ENV{CUDACXX} /usr/local/cuda/bin/nvcc)
 
 project(Titanic LANGUAGES C CXX CUDA) # use CXX, CUDA by default (since CUDA is a language, don't need cuda_add_executable)
 
-set(TITAN_DIR ${CMAKE_CURRENT_LIST_DIR}/titan)
-set(CMAKE_CXX_STANDARD 14) # set C++ standard to C++11
+set(TITAN_DIR ${CMAKE_CURRENT_LIST_DIR}/Titan)
+set(CMAKE_CXX_STANDARD 14) # set C++ standard to C++14
 
 set(TITAN_SOURCE_DIR ${TITAN_DIR}/src)
 set(TITAN_INCLUDE_DIR ${TITAN_DIR}/include/Titan)
@@ -35,7 +35,7 @@ target_compile_definitions(Titan PUBLIC CONSTRAINTS) # defines the CONSTRAINTS p
 
 if (NOT TITAN_SHARED_BUILD)
     target_compile_definitions(Titan PUBLIC _MWAITXINTRIN_H_INCLUDED)
-    target_compile_features(Titan PUBLIC cxx_std_11) # same as above, may be unnecessary
+    #target_compile_features(Titan PUBLIC cxx_std_11) # same as above, may be unnecessary
 endif()
 
 find_package(CUDA REQUIRED) # find and include CUDA
