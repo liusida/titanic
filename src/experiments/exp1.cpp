@@ -32,7 +32,6 @@ int main() {
   sim.createSpring(b,c);
   sim.createSpring(a,b);
 
-
   sim.createPlane(Vec(0, 0, 1), 0); // create constraint plane
 
   sim.start();
