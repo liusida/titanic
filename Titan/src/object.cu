@@ -677,7 +677,7 @@ void Ball::draw() {
 #ifdef GRAPHICS
 
 void ContactPlane::generateBuffers() {
-    glm::vec3 color = {0.22f, 0.71f, 0.0f};
+    glm::vec3 color = {0.4f, 0.4f, 0.5f};
     Vec temp = (dot(_normal, Vec(0, 1, 0)) < 0.8) ? Vec(0, 1, 0) : Vec(1, 0, 0);
 
     Vec v1 = cross(_normal, temp); // two unit vectors along plane
