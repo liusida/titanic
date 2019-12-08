@@ -1,3 +1,5 @@
+![Titanic](https://github.com/liusida/titanic/blob/master/doc/demo.png?raw=true)
+
 # titanic
 
 Trying to use Titan to do experiments.
