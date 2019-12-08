@@ -23,6 +23,7 @@ struct Edge {
     unsigned omega=0; //frequency
     unsigned type=PASSIVE_STIFF;
 };
+
 class RobotX : public Container {
 public:
     void saveJson() {
@@ -121,6 +122,7 @@ public:
     Vec center_of_mass = {0,0,0};
     double horizontal_distance_from_origin=0;
 };
+
 
 int main() {
     CMySimulation *sim = new CMySimulation();
