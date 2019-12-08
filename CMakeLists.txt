@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} 100)  # building with multiple CPU cores, saving life.
 #set(ENV{CUDACXX} /usr/local/cuda/bin/nvcc) 
 
 project(Titanic LANGUAGES C CXX CUDA) # use CXX, CUDA by default (since CUDA is a language, don't need cuda_add_executable)
@@ -91,6 +92,8 @@ target_include_directories(Titan PUBLIC
 set_target_properties(Titan PROPERTIES PUBLIC_HEADER "${TITAN_HEADER_FILES}")
 
 # added to compile experiments
+find_package(nlohmann_json REQUIRED)
+# this package can be installed through source https://github.com/nlohmann/json
 
 set(TITANIC_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 set(TITANIC_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -104,5 +107,8 @@ foreach( sourcefile ${EXP_SOURCE_FILES} )
     # target_include_directories(${name} PUBLIC ${sourcefile})
     target_include_directories(${name} PUBLIC ${TITANIC_INCLUDE_DIR})
     target_link_libraries( ${name} Titan )
+    target_link_libraries( ${name} ${Boost_LIBRARIES} )
+    target_link_libraries( ${name} nlohmann_json::nlohmann_json)
+
 endforeach( sourcefile ${EXP_SOURCE_FILES} )
 
