@@ -214,6 +214,7 @@ private:
     static Vec looks_at;
     static Vec up;
 #endif
+    friend class CMySimulation; //add a hook into titan
 };
 
 #endif //TITAN_SIM_H

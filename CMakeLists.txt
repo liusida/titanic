@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} 100)  # building with multiple CPU cores, saving life.
+set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} 8)  # building with multiple CPU cores, saving life.
 #set(ENV{CUDACXX} /usr/local/cuda/bin/nvcc) 
 
 project(Titanic LANGUAGES C CXX CUDA) # use CXX, CUDA by default (since CUDA is a language, don't need cuda_add_executable)

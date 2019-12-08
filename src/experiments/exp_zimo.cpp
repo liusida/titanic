@@ -3,14 +3,17 @@
 #include <iostream>
 #include <vector>
 
-#include <sim.h>
+#include <cmy_sim.h>
 
 using namespace std;
 
 int main() {
     double d = 0.9996; //damping, so close to 1.0, but if use default value 1.0, everything bounces annoyingly
-    Simulation sim;
+    CMySimulation sim;
+    sim.setSkyColor({0.6, 0.6, 0.7, 0.0});
     sim.createPlane(Vec(0, 0, 1), -1); // create constraint plane
+    CMyContactPlane *p = (CMyContactPlane *)sim.lastConstraint();
+    p->setPlaneColor({.3,.3,.3}, {.2,.2,.3});
 
     //First one:
     vector<Vec> tops = {Vec(0,0,1), Vec(0,0,-1), Vec(1,0,0), Vec(0,1,0), Vec(-1,0,0), Vec(0,-1,0)};
