@@ -597,7 +597,7 @@ void Ball::subdivide(GLfloat * arr, GLfloat *v1, GLfloat *v2, GLfloat *v3, int d
 
 
 void Ball::generateBuffers() {
-    glm::vec3 color = {0.22f, 0.71f, 0.0f};
+    glm::vec3 color = {0.22f, 0.71f, 0.0f}; //change color
 
     GLfloat * vertex_data = new GLfloat[20 * 3 * 3 * (int) pow(4, depth)]; // times 4 for subdivision
 
