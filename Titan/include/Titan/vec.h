@@ -21,9 +21,9 @@
 #define CUDA_DEVICE
 #endif
 
-//#include <iostream>
-//#include <cuda_runtime.h>
-//#include <cuda.h>
+#include <iostream>
+#include <cuda_runtime.h>
+#include <cuda.h>
 #include <iostream>
 #include <cmath>
 
