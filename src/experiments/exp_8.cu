@@ -39,19 +39,17 @@ int main() {
     sim.createPlane(Vec(0,0,1), 0);
     sim.createField(h_sam_field);
     sim.createField(h_gravity);
-    Mass * m_collision_1 = sim.createMass(Vec(0.1,0,0));
-    Mass * m_collision_2 = sim.createMass(Vec(-0.1,0,0));
-    Spring * s_collision = sim.createSpring(m_collision_1, m_collision_2);
-    s_collision->_rest = (0.2); 
 
-    Mass * m1 = sim.createMass(Vec(0,1,0));
+    Mass * m1 = sim.createMass(Vec(1,0,0));
     Mass * m2 = sim.createMass(Vec(0,1,0));
     // for (unsigned i=0;i<2;i++)
     //     sim.createMass(Vec(random_double_number*10,random_double_number*10,0));
     m1->vel = Vec(3,0,0);
+    m2->vel = Vec(0,1,0);
+    //sim.collision.strength = 0.0f;
     sim.start();
     while(1) {
         std::this_thread::sleep_for(std::chrono::microseconds(1));
-        sim.processCollision();
+        //sim.processCollision();
     }
 }
