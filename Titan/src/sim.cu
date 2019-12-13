@@ -628,17 +628,21 @@ void Simulation::getCollision() {
     collision = temp;
 }
 void Simulation::processCollision() {
-    int hit = 0;
-    for (auto s:springs) {
-        if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
-            hit = 1;
-            break;
+    if (collision.strength>0) {
+        printf("%f) %f \n", time(), collision.strength);
+        int hit = 0;
+        for (auto s:springs) {
+            if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
+                hit = 1;
+                break;
+            }
         }
-    }
-    if (!hit) {
-        //pause(0);
-        //createSpring(masses[collision._left_index], masses[collision._right_index]);
-        //resume();
+        if (!hit) {
+            pause(0);
+            createSpring(masses[collision._left_index], masses[collision._right_index]);
+            resume();
+        }
+        clearCollision();
     }
 }
 void Simulation::clearCollision() {
@@ -1683,11 +1687,6 @@ void Simulation::execute() {
         collisionDetection<<<sqrtMassBlocksPerGrid, threadsPerBlock>>>(time(), d_mass, d_spring, d_collision, masses.size(), springs.size());
         gpuErrchk( cudaPeekAtLastError() );
         getCollision();
-        if (collision.strength>0) {
-            printf("%f) %f \n", time(), collision.strength);
-            processCollision();
-            clearCollision();
-        }
 
         T += dt;
 #else

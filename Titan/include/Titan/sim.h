@@ -128,6 +128,9 @@ public:
     void setViewport(const Vec & camera_position, const Vec & target_location, const Vec & up_vector);
     void moveViewport(const Vec & displacement);
 #endif
+    
+    Collision collision;
+    CUDA_COLLISION * d_collision;
 
 private:
     void freeGPU();
@@ -168,9 +171,6 @@ private:
 
     CUDA_MASS ** d_mass;
     CUDA_SPRING ** d_spring;
-    
-    Collision collision;
-    CUDA_COLLISION * d_collision;
 
     int massBlocksPerGrid;
     int springBlocksPerGrid;

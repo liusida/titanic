@@ -50,11 +50,8 @@ int main() {
     //     sim.createMass(Vec(random_double_number*10,random_double_number*10,0));
     m1->vel = Vec(3,0,0);
     sim.start();
-    // while(1) {
-    //     sim.pause(sim.time()+1.3);
-    //     sim.getAll();
-    //     cout<<"Sim Time: "<<sim.time()<<endl;
-    //     sim.printPositions();
-    //     sim.resume();
-    // }
+    while(1) {
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        sim.processCollision();
+    }
 }

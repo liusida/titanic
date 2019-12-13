@@ -16,7 +16,7 @@ public:
     void operator=(CUDA_COLLISION & d_c);
     int _left_index;
     int _right_index;
-    double strength; // TODO: what is the physical variable for describing how strong a collision is?
+    double strength=0; // TODO: what is the physical variable for describing how strong a collision is?
 };
 
 struct CUDA_COLLISION
@@ -24,7 +24,7 @@ struct CUDA_COLLISION
     CUDA_COLLISION() = default;
     int _left_index;
     int _right_index;
-    double strength;    
+    double strength=0;    
 };
 
 
