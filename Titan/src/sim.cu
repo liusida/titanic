@@ -631,7 +631,7 @@ void Simulation::processCollision() {
     if (!(collision==collision_last)) {
         collision_last = collision;
         if (collision.strength>0) {
-            printf("%f) %f \n", time(), collision.strength);
+            //printf("%f) %f \n", time(), collision.strength);
             int hit = 0;
             for (auto s:springs) {
                 if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
@@ -643,7 +643,7 @@ void Simulation::processCollision() {
                 pause(0);
                 getAll();
                 Spring *s = createSpring(masses[collision._left_index], masses[collision._right_index]);
-                s->setRestLength(minimum_distance+1); //spring should be longer than detect distance, so there will be less detection
+                s->setRestLength(minimum_distance*1.5); //spring should be longer than detect distance, so there will be less detection
                 s->_type = 2;
                 s->_k = 1;
                 
