@@ -640,6 +640,7 @@ void Simulation::processCollision() {
         if (!hit) {
             pause(0);
             createSpring(masses[collision._left_index], masses[collision._right_index]);
+            //printf("Create Spring between mass %d and %d. (strength: %f) \n", collision._left_index, collision._right_index, collision.strength);
             resume();
         }
         clearCollision();
@@ -1496,6 +1497,8 @@ void Simulation::start() {
     d_spring = thrust::raw_pointer_cast(d_springs.data());
 
     gpuErrchk(cudaMalloc((void **) &d_collision, sizeof(CUDA_COLLISION)));
+    CUDA_COLLISION temp(collision);
+    gpuErrchk(cudaMemcpy(d_collision, &temp, sizeof(CUDA_COLLISION), cudaMemcpyHostToDevice));
 
     gpu_thread = std::thread(&Simulation::_run, this);
 }

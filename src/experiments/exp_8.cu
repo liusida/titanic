@@ -42,14 +42,14 @@ int main() {
 
     Mass * m1 = sim.createMass(Vec(1,0,0));
     Mass * m2 = sim.createMass(Vec(0,1,0));
-    // for (unsigned i=0;i<2;i++)
-    //     sim.createMass(Vec(random_double_number*10,random_double_number*10,0));
+    for (unsigned i=0;i<20;i++)
+        sim.createMass(Vec(random_double_number*10,random_double_number*10,0));
     m1->vel = Vec(3,0,0);
     m2->vel = Vec(0,1,0);
     //sim.collision.strength = 0.0f;
     sim.start();
     while(1) {
         std::this_thread::sleep_for(std::chrono::microseconds(1));
-        //sim.processCollision();
+        sim.processCollision();
     }
 }

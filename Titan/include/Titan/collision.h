@@ -22,6 +22,8 @@ public:
 struct CUDA_COLLISION
 {
     CUDA_COLLISION() = default;
+    CUDA_COLLISION(Collision &c):
+        _left_index(c._left_index), _right_index(c._right_index), strength(c.strength) {};
     int _left_index;
     int _right_index;
     double strength=0;    
