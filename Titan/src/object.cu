@@ -695,7 +695,7 @@ void Ball::draw() {
 #ifdef GRAPHICS
 
 void ContactPlane::generateBuffers() {
-    glm::vec3 color = {0.22f, 0.71f, 0.0f};
+    glm::vec3 color = {0.1, 0.1, 0.1f}; //Sida: change color to gray
     Vec temp = (dot(_normal, Vec(0, 1, 0)) < 0.8) ? Vec(0, 1, 0) : Vec(1, 0, 0);
 
     Vec v1 = cross(_normal, temp); // two unit vectors along plane
@@ -804,4 +804,32 @@ void ContactPlane::draw() {
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
 }
+#endif
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CUDA_CALLABLE_MEMBER Vec d_field_force(Vec pos) {
+    printf("d_field_force.\n");
+    return -0.01*pos;
+}
+CUDA_CALLABLE_MEMBER CudaField::CudaField(const Vec & center, double radius) {
+}
+
+CUDA_CALLABLE_MEMBER CudaField::CudaField(const Field & b) {
+    _func = b._func;
+}
+
+CUDA_CALLABLE_MEMBER void CudaField::applyForce(CUDA_MASS * m) {
+    Vec field_force = _func(m);
+    m->force += field_force;
+}
+
+#ifdef GRAPHICS
+void Field::generateBuffers() {
+    _initialized = true;
+}
+void Field::draw() {
+}
+
 #endif

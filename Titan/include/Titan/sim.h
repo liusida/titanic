@@ -5,6 +5,7 @@
 #ifndef TITAN_SIM_H
 #define TITAN_SIM_H
 
+#include "collision.h"
 #include "spring.h"
 #include "mass.h"
 #include "object.h"
@@ -54,6 +55,10 @@ public:
     void set(Spring *s);
     void set(Container * c);
 
+    void getCollision();
+    void processCollision();
+    void clearCollision();
+
     void getAll();
     void setAll();
 
@@ -62,6 +67,7 @@ public:
     void createPlane(const Vec &abc, double d, double FRICTION_K, double FRICTION_S);  // creates half-space ax + by + cz < d
 
     void createBall(const Vec & center, double r ); // creates ball with radius r at position center
+    void createField(funcptr func); // creates field with radius r at position center
 
     void clearConstraints(); // clears global constraints only
 
@@ -151,6 +157,7 @@ private:
 
     thrust::device_vector<CudaContactPlane> d_planes; // used for constraints
     thrust::device_vector<CudaBall> d_balls; // used for constraints
+    thrust::device_vector<CudaField> d_fields; // used for constraints
 
     CUDA_GLOBAL_CONSTRAINTS d_constraints;
     bool update_constraints;
@@ -161,6 +168,9 @@ private:
 
     CUDA_MASS ** d_mass;
     CUDA_SPRING ** d_spring;
+    
+    Collision collision;
+    CUDA_COLLISION * d_collision;
 
     int massBlocksPerGrid;
     int springBlocksPerGrid;

@@ -32,6 +32,7 @@ __global__ void createMassPointers(CUDA_MASS ** ptrs, CUDA_MASS * data, int size
 __global__ void computeSpringForces(CUDA_SPRING ** device_springs, int num_springs, double t);
 __global__ void massForcesAndUpdate(CUDA_MASS ** d_mass, Vec global, CUDA_GLOBAL_CONSTRAINTS c, int num_masses);
 
+__global__ void collisionDetection(double t, CUDA_MASS ** d_mass, CUDA_SPRING ** d_spring, CUDA_COLLISION * d_collision, int num_masses, int num_springs);
 bool Simulation::RUNNING;
 bool Simulation::STARTED;
 bool Simulation::ENDED;
@@ -62,7 +63,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=f
 {
     if (code != cudaSuccess)
     {
-        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        //fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
 
         if (abort) {
             char buffer[200];
@@ -158,7 +159,9 @@ void Simulation::freeGPU() {
     }
 
     d_balls.clear();
+    d_fields.clear();
     d_balls.shrink_to_fit();
+    d_fields.shrink_to_fit();
 
     d_planes.clear();
     d_planes.shrink_to_fit();
@@ -617,6 +620,32 @@ void Simulation::get(Spring * s) {
     CUDA_SPRING temp;
     gpuErrchk(cudaMemcpy(&temp, s -> arrayptr, sizeof(CUDA_SPRING), cudaMemcpyDeviceToHost));
     *s = Spring(temp);
+}
+
+void Simulation::getCollision() {
+    CUDA_COLLISION temp;
+    gpuErrchk(cudaMemcpy(&temp, d_collision, sizeof(CUDA_COLLISION), cudaMemcpyDeviceToHost));
+    collision = temp;
+}
+void Simulation::processCollision() {
+    int hit = 0;
+    for (auto s:springs) {
+        if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
+            hit = 1;
+            break;
+        }
+    }
+    if (!hit) {
+        //pause(0);
+        //createSpring(masses[collision._left_index], masses[collision._right_index]);
+        //resume();
+    }
+}
+void Simulation::clearCollision() {
+    CUDA_COLLISION temp;
+    temp.strength=0;
+    gpuErrchk(cudaMemcpy(d_collision, &temp, sizeof(CUDA_COLLISION), cudaMemcpyHostToDevice));
+    collision = temp;
 }
 
 void Simulation::set(Spring * s) {
@@ -1099,6 +1128,9 @@ __global__ void massForcesAndUpdate(CUDA_MASS ** d_mass, Vec global, CUDA_GLOBAL
             c.d_balls[j].applyForce(&mass);
         }
 
+        for (int j = 0; j < c.num_fields; j++) {
+            c.d_fields[j].applyForce(&mass);
+        }
 #ifdef CONSTRAINTS
         for (int j = 0; j < mass.constraints.num_contact_planes; j++) { // local constraints
             mass.constraints.contact_plane[j].applyForce(&mass);
@@ -1130,6 +1162,22 @@ __global__ void massForcesAndUpdate(CUDA_MASS ** d_mass, Vec global, CUDA_GLOBAL
     }
 }
 
+__global__ void collisionDetection(double t, CUDA_MASS ** d_mass, CUDA_SPRING ** d_spring, CUDA_COLLISION * d_collision, int num_masses, int num_springs) {
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int j = blockDim.y * blockIdx.y + threadIdx.y;
+    if (i<j && i < num_masses && j < num_masses) {
+        CUDA_MASS &mass_i = *d_mass[i];
+        CUDA_MASS &mass_j = *d_mass[j];
+        double _distance = (mass_i.pos - mass_j.pos).norm();
+        if (_distance<0.01) {
+            //close enough to form a spring
+            //printf("%f) _distance: %f) %d and %d are close enough to form a spring!\n", t, _distance, i, j);
+            d_collision->_left_index = i;
+            d_collision->_right_index = j;
+            d_collision->strength = _distance;
+        }
+    }
+}
 // __global__ void combinedKernel(CUDA_MASS ** d_mass, CUDA_SPRING ** d_spring, int num_masses, int num_springs, Vec global, CUDA_GLOBAL_CONSTRAINTS c, double t) {
 //     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -1429,8 +1477,10 @@ void Simulation::start() {
     updateCudaParameters();
 
     d_constraints.d_balls = thrust::raw_pointer_cast(&d_balls[0]);
+    d_constraints.d_fields = thrust::raw_pointer_cast(&d_fields[0]);
     d_constraints.d_planes = thrust::raw_pointer_cast(&d_planes[0]);
     d_constraints.num_balls = d_balls.size();
+    d_constraints.num_fields = d_fields.size();
     d_constraints.num_planes = d_planes.size();
 
     update_constraints = false;
@@ -1440,6 +1490,8 @@ void Simulation::start() {
 
     d_mass = thrust::raw_pointer_cast(d_masses.data());
     d_spring = thrust::raw_pointer_cast(d_springs.data());
+
+    gpuErrchk(cudaMalloc((void **) &d_collision, sizeof(CUDA_COLLISION)));
 
     gpu_thread = std::thread(&Simulation::_run, this);
 }
@@ -1589,24 +1641,27 @@ void Simulation::execute() {
             }
 
 #ifdef CONSTRAINTS
+#ifdef GRAPHICS
             if (resize_buffers) {
                 resizeBuffers(); // needs to be run from GPU thread
                 resize_buffers = false;
                 update_colors = true;
                 update_indices = true;
             }
-
+#endif
             if (update_constraints) {
                 d_constraints.d_balls = thrust::raw_pointer_cast(&d_balls[0]);
+                d_constraints.d_fields = thrust::raw_pointer_cast(&d_fields[0]);
                 d_constraints.d_planes = thrust::raw_pointer_cast(&d_planes[0]);
                 d_constraints.num_balls = d_balls.size();
+                d_constraints.num_fields = d_fields.size();
                 d_constraints.num_planes = d_planes.size();
-
+#ifdef GRAPHICS
                 for (Constraint * c : constraints) { // generate buffers for constraint objects
                     if (! c -> _initialized)
                         c -> generateBuffers();
                 }
-
+#endif
                 update_constraints = false;
             }
 #endif
@@ -1620,6 +1675,20 @@ void Simulation::execute() {
         gpuErrchk( cudaPeekAtLastError() );
         massForcesAndUpdate<<<massBlocksPerGrid, THREADS_PER_BLOCK>>>(d_mass, global, d_constraints, masses.size());
         gpuErrchk( cudaPeekAtLastError() );
+
+        //THREADS_PER_BLOCK is 1024, sqrt(THREADS_PER_BLOCK) is 32
+        #define SQRT_THREADS_PER_BLOCK 32
+        dim3 threadsPerBlock(SQRT_THREADS_PER_BLOCK, SQRT_THREADS_PER_BLOCK);
+        int sqrtMassBlocksPerGrid = (masses.size() + SQRT_THREADS_PER_BLOCK - 1) / SQRT_THREADS_PER_BLOCK;
+        collisionDetection<<<sqrtMassBlocksPerGrid, threadsPerBlock>>>(time(), d_mass, d_spring, d_collision, masses.size(), springs.size());
+        gpuErrchk( cudaPeekAtLastError() );
+        getCollision();
+        if (collision.strength>0) {
+            printf("%f) %f \n", time(), collision.strength);
+            processCollision();
+            clearCollision();
+        }
+
         T += dt;
 #else
         for (int i = 0; i < NUM_QUEUED_KERNELS; i++) {
@@ -2076,7 +2145,17 @@ void Simulation::createBall(const Vec & center, double r ) { // creates ball wit
 
     update_constraints = true;
 }
+void Simulation::createField(funcptr func) { // creates field with radius r at position center
+    if (ENDED) {
+        throw std::runtime_error("The simulation has ended. New constraints cannot be added.");
+    }
 
+    Field * new_field = new Field(func);
+    constraints.push_back(new_field);
+    d_fields.push_back(CudaField(*new_field));
+
+    update_constraints = true;
+}
 void Simulation::clearConstraints() { // clears global constraints only
     this -> constraints.clear();
     update_constraints = true;

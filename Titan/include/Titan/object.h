@@ -40,6 +40,9 @@ class Mass;
 #define CUDA_DEVICE
 #endif
 
+typedef Vec (* FieldFunc)(Vec pos);
+typedef Vec (*funcptr) (CUDA_MASS * m);
+
 class Constraint { // constraint like plane or sphere which applies force to masses
 public:
     virtual ~Constraint() = default;
@@ -48,6 +51,24 @@ public:
     bool _initialized;
     virtual void generateBuffers() = 0;
     virtual void draw() = 0;
+#endif
+};
+
+struct Field : public Constraint {
+    Field(funcptr func) {
+        _func = func;
+
+#ifdef GRAPHICS
+        _initialized = false;
+#endif
+
+    }
+
+    funcptr _func;
+
+#ifdef GRAPHICS
+    void generateBuffers();
+    void draw();
 #endif
 };
 
@@ -95,6 +116,16 @@ struct CudaBall {
     double _radius;
     Vec _center;
 };
+struct CudaField {
+    CudaField() = default;
+    CUDA_CALLABLE_MEMBER CudaField(const Vec & center, double radius);
+    CUDA_CALLABLE_MEMBER CudaField(const Field & b);
+
+    CUDA_CALLABLE_MEMBER void applyForce(CUDA_MASS * m);
+
+    funcptr _func;
+};
+
 
 struct ContactPlane : public Constraint {
     ContactPlane(const Vec & normal, double offset) {
@@ -169,9 +200,11 @@ struct CudaDirection {
 struct CUDA_GLOBAL_CONSTRAINTS {
     CudaContactPlane * d_planes;
     CudaBall * d_balls;
+    CudaField * d_fields;
 
     int num_planes;
     int num_balls;
+    int num_fields;
 };
 
 
@@ -300,6 +333,11 @@ public:
     /* Vec _com; */
     /* double _score; */
 };
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 #endif //TITAN_OBJECT_H
