@@ -12,7 +12,7 @@ using namespace std;
 #define random_double_number ((double) rand()/RAND_MAX)
 
 __device__ Vec sam_field_force(CUDA_MASS * m) {
-    Vec f = -0.1*m->pos;
+    Vec f = -0.01*m->pos;
     f[2] = 0;
     return f;
 }
@@ -33,23 +33,24 @@ int main() {
 
     Simulation sim;
 #ifdef GRAPHICS
-    sim.setViewport(Vec(0,0,20), Vec(0,0,0), Vec(0,1,0));
+    sim.setViewport(Vec(0,0,40), Vec(0,0,0), Vec(0,1,0));
 #endif
     sim.setGlobalAcceleration(Vec(0,0,0));
     sim.createPlane(Vec(0,0,1), 0);
     sim.createField(h_sam_field);
     sim.createField(h_gravity);
 
-    Mass * m1 = sim.createMass(Vec(1,0,0));
-    Mass * m2 = sim.createMass(Vec(0,1,0));
-    for (unsigned i=0;i<20;i++)
-        sim.createMass(Vec(random_double_number*10,random_double_number*10,0));
-    m1->vel = Vec(3,0,0);
-    m2->vel = Vec(0,1,0);
-    //sim.collision.strength = 0.0f;
+    for (unsigned i=0;i<20;i++) {
+        Mass *m = sim.createMass(Vec(random_double_number*10,random_double_number*10,0));
+        m->vel = Vec(random_double_number*10, random_double_number*10, 0);
+        m->damping = 0.9998;
+    }
+
+    sim.minimum_distance = 2;
+
     sim.start();
     while(1) {
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
         sim.processCollision();
     }
 }

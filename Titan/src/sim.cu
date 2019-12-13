@@ -628,29 +628,31 @@ void Simulation::getCollision() {
     collision = temp;
 }
 void Simulation::processCollision() {
-    if (collision.strength>0) {
-        printf("%f) %f \n", time(), collision.strength);
-        int hit = 0;
-        for (auto s:springs) {
-            if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
-                hit = 1;
-                break;
+    if (!(collision==collision_last)) {
+        collision_last = collision;
+        if (collision.strength>0) {
+            printf("%f) %f \n", time(), collision.strength);
+            int hit = 0;
+            for (auto s:springs) {
+                if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
+                    hit = 1;
+                    break;
+                }
+            }
+            if (!hit) {
+                pause(0);
+                getAll();
+                Spring *s = createSpring(masses[collision._left_index], masses[collision._right_index]);
+                s->setRestLength(minimum_distance+1); //spring should be longer than detect distance, so there will be less detection
+                s->_type = 2;
+                s->_k = 1;
+                
+                printf("Created Spring between mass %d and %d. (strength: %f) \n", collision._left_index, collision._right_index, collision.strength);
+                setAll();
+                resume();
             }
         }
-        if (!hit) {
-            pause(0);
-            createSpring(masses[collision._left_index], masses[collision._right_index]);
-            //printf("Create Spring between mass %d and %d. (strength: %f) \n", collision._left_index, collision._right_index, collision.strength);
-            resume();
-        }
-        clearCollision();
     }
-}
-void Simulation::clearCollision() {
-    CUDA_COLLISION temp;
-    temp.strength=0;
-    gpuErrchk(cudaMemcpy(d_collision, &temp, sizeof(CUDA_COLLISION), cudaMemcpyHostToDevice));
-    collision = temp;
 }
 
 void Simulation::set(Spring * s) {
@@ -1167,14 +1169,14 @@ __global__ void massForcesAndUpdate(CUDA_MASS ** d_mass, Vec global, CUDA_GLOBAL
     }
 }
 
-__global__ void collisionDetection(double t, CUDA_MASS ** d_mass, CUDA_SPRING ** d_spring, CUDA_COLLISION * d_collision, int num_masses, int num_springs) {
+__global__ void collisionDetection(double t, CUDA_MASS ** d_mass, CUDA_SPRING ** d_spring, CUDA_COLLISION * d_collision, int num_masses, int num_springs, int minimum_distance) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     int j = blockDim.y * blockIdx.y + threadIdx.y;
     if (i<j && i < num_masses && j < num_masses) {
         CUDA_MASS &mass_i = *d_mass[i];
         CUDA_MASS &mass_j = *d_mass[j];
         double _distance = (mass_i.pos - mass_j.pos).norm();
-        if (_distance<0.01) {
+        if (_distance < minimum_distance) {
             //close enough to form a spring
             //printf("%f) _distance: %f) %d and %d are close enough to form a spring!\n", t, _distance, i, j);
             d_collision->_left_index = i;
@@ -1683,14 +1685,15 @@ void Simulation::execute() {
         massForcesAndUpdate<<<massBlocksPerGrid, THREADS_PER_BLOCK>>>(d_mass, global, d_constraints, masses.size());
         gpuErrchk( cudaPeekAtLastError() );
 
-        //THREADS_PER_BLOCK is 1024, sqrt(THREADS_PER_BLOCK) is 32
-        #define SQRT_THREADS_PER_BLOCK 32
-        dim3 threadsPerBlock(SQRT_THREADS_PER_BLOCK, SQRT_THREADS_PER_BLOCK);
-        int sqrtMassBlocksPerGrid = (masses.size() + SQRT_THREADS_PER_BLOCK - 1) / SQRT_THREADS_PER_BLOCK;
-        collisionDetection<<<sqrtMassBlocksPerGrid, threadsPerBlock>>>(time(), d_mass, d_spring, d_collision, masses.size(), springs.size());
-        gpuErrchk( cudaPeekAtLastError() );
-        getCollision();
-
+        if (minimum_distance > 0) { //if minimum_distance is 0, there's no need to detect collision
+            //THREADS_PER_BLOCK is 1024, sqrt(THREADS_PER_BLOCK) is 32
+            #define SQRT_THREADS_PER_BLOCK 32
+            dim3 threadsPerBlock(SQRT_THREADS_PER_BLOCK, SQRT_THREADS_PER_BLOCK);
+            int sqrtMassBlocksPerGrid = (masses.size() + SQRT_THREADS_PER_BLOCK - 1) / SQRT_THREADS_PER_BLOCK;
+            collisionDetection<<<sqrtMassBlocksPerGrid, threadsPerBlock>>>(time(), d_mass, d_spring, d_collision, masses.size(), springs.size(), minimum_distance);
+            gpuErrchk( cudaPeekAtLastError() );
+            getCollision();
+        }
         T += dt;
 #else
         for (int i = 0; i < NUM_QUEUED_KERNELS; i++) {

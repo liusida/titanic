@@ -14,6 +14,8 @@ class Collision { //It seems to be an Event, not belong to Object or Constraint 
 public:
     Collision() = default;
     void operator=(CUDA_COLLISION & d_c);
+    void operator=(Collision & c);
+    bool operator==(Collision & c);
     int _left_index;
     int _right_index;
     double strength=0; // TODO: what is the physical variable for describing how strong a collision is?

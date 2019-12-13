@@ -57,7 +57,7 @@ public:
 
     void getCollision();
     void processCollision();
-    void clearCollision();
+    //void clearCollision();
 
     void getAll();
     void setAll();
@@ -130,7 +130,9 @@ public:
 #endif
     
     Collision collision;
+    Collision collision_last;
     CUDA_COLLISION * d_collision;
+    int minimum_distance=0;
 
 private:
     void freeGPU();
