@@ -5,14 +5,25 @@
 
 3. When two masses touch there is a probability based on their velocities that they stick together permanently with a spring.
 */
+
+// #include <curand.h>
+// #include <curand_kernel.h>
+
 #include <iostream>
 using namespace std;
 #include <sim.h>
 
 #define random_double_number ((double) rand()/RAND_MAX)
 
+// __device__ Vec random_walk(CUDA_MASS *m) {
+//     Vec f;
+//     f[0] = (int(m->pos[0]*1000))%2-2;
+//     f[1] = (int(m->pos[1]*1000))%2-2;
+//     return f;
+// }
+
 __device__ Vec sam_field_force(CUDA_MASS * m) {
-    Vec f = -0.001*m->pos;
+    Vec f = -0.01*m->pos/m->pos.norm();
     f[2] = 0;
     return f;
 }
@@ -33,7 +44,7 @@ int main() {
 
     Simulation sim;
 #ifdef GRAPHICS
-    sim.setViewport(Vec(0,0,30), Vec(0,0,0), Vec(0,1,0));
+    sim.setViewport(Vec(0,0,40), Vec(0,0,0), Vec(0,1,0));
 #endif
     sim.setGlobalAcceleration(Vec(0,0,0));
     sim.createPlane(Vec(0,0,1), 0);
@@ -41,11 +52,11 @@ int main() {
     sim.createField(h_gravity);
 
     for (unsigned i=0;i<100;i++) {
-        Mass *m = sim.createMass(Vec(random_double_number*50-25,random_double_number*50-25,0));
-        // m->vel[1] = m->pos[0]*0.2 + random_double_number;
-        // m->vel[0] = -m->pos[1]*0.2 - random_double_number;
-        // m->vel[2] = 0;
-        //m->damping = 0.9999;
+        Mass *m = sim.createMass(Vec(random_double_number*100-50,random_double_number*100-50,0));
+        //m->vel[1] = m->pos[0]*0.2 + random_double_number;
+        //m->vel[0] = -m->pos[1]*0.2 - random_double_number;
+        //m->vel[2] = 0;
+        //m->damping = 0.99999;
     }
 
     sim.minimum_distance = 1;

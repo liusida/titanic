@@ -4,6 +4,23 @@
 #define GLM_FORCE_PURE
 #include "mass.h"
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=false)
+{
+    if (code != cudaSuccess)
+    {
+        //fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+
+        if (abort) {
+            char buffer[200];
+            snprintf(buffer, sizeof(buffer), "GPUassert error in CUDA kernel: %s %s %d\n", cudaGetErrorString(code), file, line);
+            std::string buffer_string = buffer;
+            throw std::runtime_error(buffer_string);
+            exit(code);
+        }
+    }
+}
+
 Mass::Mass() {
     m = 1.0;
     dt = 0.0001;
@@ -31,7 +48,11 @@ void Mass::operator=(CUDA_MASS & mass) {
 
     ref_count = this -> ref_count;
     arrayptr = this -> arrayptr;
-
+    
+    neighbors.clear();
+    for (unsigned i=0;i<mass.num_neighbors;i++) {
+        neighbors.push_back(mass.arrayptr->neighbors[i]);
+    }
 #ifdef CONSTRAINTS
     constraints = this -> constraints;
 #endif
@@ -71,6 +92,23 @@ CUDA_MASS::CUDA_MASS(Mass &mass) {
     force = mass.force;
     valid = true;
 
+    arrayptr = &mass;
+    //printf("CUDA: %p ->Mass: %p\n", this, arrayptr);
+    CUDA_MASS ** temp = new CUDA_MASS * [mass.neighbors.size()];
+    for (unsigned i=0;i<mass.neighbors.size();i++) {
+        temp[i] = mass.neighbors[i]->arrayptr;
+    }
+    gpuErrchk(cudaMalloc((void **) &neighbors, sizeof(CUDA_MASS *) * mass.neighbors.size()));
+    gpuErrchk(cudaMemcpy(neighbors, temp, mass.neighbors.size() * sizeof(CUDA_MASS *), cudaMemcpyHostToDevice));
+    delete temp;
+
+    num_neighbors = mass.neighbors.size();
+    //printf("CUDA_MASS(mass): # of neighbors: %d. \n", num_neighbors);
+
+    // for (unsigned i=0;i<mass.neighbors.size();i++) {
+    //     neighbors[i] = mass.neighbors[i]->arrayptr;
+    //     printf("ptr: %p\n", mass.neighbors[i]->arrayptr);
+    // }
 #ifdef CONSTRAINTS
     constraints = CUDA_LOCAL_CONSTRAINTS(mass.constraints);
 #endif

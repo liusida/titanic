@@ -630,11 +630,11 @@ void Simulation::getCollision() {
 void Simulation::processCollision() {
     if (!(collision==collision_last)) {
         collision_last = collision;
-        if (collision.strength>0) {
-            //printf("%f) %f \n", time(), collision.strength);
+        if (collision_last.strength>0) {
             int hit = 0;
             for (auto s:springs) {
-                if (s->_left==masses[collision._left_index] && s->_right==masses[collision._right_index]) {
+                //printf ("%d\n", (long)s); 
+                if (s->_left==masses[collision_last._left_index] && s->_right==masses[collision_last._right_index]) {
                     hit = 1;
                     break;
                 }
@@ -642,12 +642,14 @@ void Simulation::processCollision() {
             if (!hit) {
                 pause(0);
                 getAll();
-                Spring *s = createSpring(masses[collision._left_index], masses[collision._right_index]);
-                s->setRestLength(minimum_distance*1.5); //spring should be longer than detect distance, so there will be less detection
-                s->_type = 2;
-                s->_k = 1;
+                Spring *s = createSpring(masses[collision_last._left_index], masses[collision_last._right_index]);
+                s->setRestLength(minimum_distance*1.1); //spring should be longer than detect distance, so there will be less detection
+                s->_type = 3;
+                s->_k = 10;
+                s->_left->damping=0.9999;
+                s->_right->damping=0.9999;
                 
-                printf("Created Spring between mass %d and %d. (strength: %f) \n", collision._left_index, collision._right_index, collision.strength);
+                printf("Created Spring between mass %d and %d. (strength: %f) \n", collision_last._left_index, collision_last._right_index, collision_last.strength);
                 setAll();
                 resume();
             }
@@ -1080,14 +1082,14 @@ __global__ void computeSpringForces(CUDA_SPRING ** d_spring, int num_springs, do
             return;
 
         Vec temp = (spring._right -> pos) - (spring._left -> pos);
-	//	printf("%d, %f, %f\n",spring._type, spring._omega,t);
-	double scale=1.0;
-	if (spring._type == ACTIVE_CONTRACT_THEN_EXPAND){
-	  scale = (1 - 0.2*sin(spring._omega * t));
-	}else if (spring._type == ACTIVE_EXPAND_THEN_CONTRACT){
-	  scale = (1 + 0.2*sin(spring._omega * t));
-	}
-	
+        //	printf("%d, %f, %f\n",spring._type, spring._omega,t);
+        double scale=1.0;
+        if (spring._type == ACTIVE_CONTRACT_THEN_EXPAND){
+        scale = (1 - 0.2*sin(spring._omega * t));
+        }else if (spring._type == ACTIVE_EXPAND_THEN_CONTRACT){
+        scale = (1 + 0.2*sin(spring._omega * t));
+        }
+        
         Vec force = spring._k * (spring._rest * scale - temp.norm()) * (temp / temp.norm());
 
 
@@ -1173,12 +1175,27 @@ __global__ void collisionDetection(double t, CUDA_MASS ** d_mass, CUDA_SPRING **
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     int j = blockDim.y * blockIdx.y + threadIdx.y;
     if (i<j && i < num_masses && j < num_masses) {
+    
+        for (unsigned k=0;k<d_mass[i]->num_neighbors;k++) {
+            //printf("%p\n", d_mass[i]->neighbors[k]);
+            if (d_mass[i]->neighbors[k]==d_mass[j]) {
+                //printf("%f) repeated.\n", t);
+                return;
+            }
+        }
+        if (d_mass[i]->pos[0]>10 || d_mass[i]->pos[0]<-10 || d_mass[j]->pos[0]>10 || d_mass[j]->pos[0]<-10 || 
+            d_mass[i]->pos[1]>10 || d_mass[i]->pos[1]<-10 || d_mass[j]->pos[1]>10 || d_mass[j]->pos[1]<-10) {
+            return;
+        }
+
         CUDA_MASS &mass_i = *d_mass[i];
         CUDA_MASS &mass_j = *d_mass[j];
         double _distance = (mass_i.pos - mass_j.pos).norm();
+
+        //printf("Comparing %d and %d, the distance is %f \n", i, j, _distance);
         if (_distance < minimum_distance) {
             //close enough to form a spring
-            //printf("%f) _distance: %f) %d and %d are close enough to form a spring!\n", t, _distance, i, j);
+            printf("%f) _distance: %f) %d and %d are close enough to form a spring!\n", t, _distance, i, j);
             d_collision->_left_index = i;
             d_collision->_right_index = j;
             d_collision->strength = _distance;

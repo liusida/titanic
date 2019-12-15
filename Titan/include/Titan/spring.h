@@ -39,13 +39,22 @@ public:
     Spring(const CUDA_SPRING & spr);
 
     Spring(Mass * left, Mass * right, double k = 10000.0, double rest_len = 1.0) :
-            _k(k), _rest(rest_len), _left(left), _right(right), arrayptr(nullptr) {}; //
+            _k(k), _rest(rest_len), _left(left), _right(right), arrayptr(nullptr) {
+                    left->neighbors.push_back(right);
+                    right->neighbors.push_back(left);
+            }; //
 
     Spring(double k, double rest_length, Mass * left, Mass * right) :
-            _k(k), _rest(rest_length), _left(left), _right(right) {};
+            _k(k), _rest(rest_length), _left(left), _right(right) {
+                    left->neighbors.push_back(right);
+                    right->neighbors.push_back(left);
+            };
 
     Spring(double k, double rest_length, Mass * left, Mass * right, int type, double omega) :
-            _k(k), _rest(rest_length), _left(left), _right(right), _type(type), _omega(omega) {};
+            _k(k), _rest(rest_length), _left(left), _right(right), _type(type), _omega(omega) {
+                    left->neighbors.push_back(right);
+                    right->neighbors.push_back(left);
+            };
 	    
     void setForce(); // will be private
     void setRestLength(double rest_length) { _rest = rest_length; } //sets Rest length

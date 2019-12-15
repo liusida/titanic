@@ -25,6 +25,10 @@ struct CUDA_MASS {
     Vec acc; // acceleration in m/s^2
     Vec force; // force in kg m / s^2
 
+    CUDA_MASS ** neighbors;
+    unsigned num_neighbors=0;
+    Mass * arrayptr; //Pointer to struct version for GPU cudaMemAlloc
+
 #ifdef GRAPHICS
     Vec color;
 #endif
@@ -49,6 +53,8 @@ public:
     Vec acc; // acceleration in m/s^2
     Vec force; // force in kg m / s^2
     
+    std::vector<Mass *> neighbors;
+
     Mass(const Vec & position, double mass = 0.1, bool fixed = false, double dt = 0.0001);
 #ifdef CONSTRAINTS
     void addConstraint(CONSTRAINT_TYPE type, const Vec & vec, double num);
